@@ -1,1 +1,61 @@
-<p>all-issues works!</p>
+<div class="container-fluid" >
+    <div class="row">
+        <div class="col-md-12 navBar">
+            <nav class="navbar navbar-expand-md navbar-light" style="background-color: rgb(227, 228, 230);">
+                <a class="navbar-brand brand" href="dashboard"><span style="font-size: larger;">i</span>TracK</a>
+                <button class="navbar-toggler p-0 mr-2" type="button" data-toggle="collapse" data-target="#userSettings"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon p-2"
+                        style="background-color: rgb(10, 235, 168); border-radius: 8px;"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="userSettings">
+                    <ul class="navbar-nav ml-auto ml-5 mr-5">
+                        <li class="nav-item dropdown ml-5 mr-5" style="width: 100%;">
+                            <a class="nav-link dropdown-toggle" style="color: rgb(16, 39, 33)" id="userDropdown"
+                                role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {{userName}}
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="userDropdown" style="max-width: fit-content;">
+                                <a class="dropdown-item" (click)="logout()">Logout</a>
+                            </div>                            
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- display for mobile screen -->
+    <div class="row d-xs-flex d-sm-none">        
+        <div class="col sideNavBar">
+            <div *ngIf="sideNavSwitch==false" class="sideNavBtn" (click)="sideNavFlag()">
+                <div class="btnDot"></div>
+                <div class="btnDot"></div>
+                <div class="btnDot"></div>
+            </div>
+            <div *ngIf = "sideNavSwitch" class="sideNavOptions">
+                <div *ngIf = "assignedIssuesSelected == false" class="options"><img class="icon" src={{assignIcon}}>Assigned</div>
+                <div *ngIf = "assignedIssuesSelected == true" class="optionsSelected"><img class="icon" src={{assignIcon}}>Assigned</div>
+                <div *ngIf = "watchingIssuesSelected == false" class="options"><img class="icon" src={{watchingIcon}}>Watching</div>
+                <div *ngIf = "watchingIssuesSelected" class="optionsSelected"><img class="icon" src={{watchingIcon}}>Watching</div>
+                <div *ngIf = "reportedIssuesSelected == false" class="options"><img class="icon" src={{reportedIcon}}>Reported</div>
+                <div *ngIf = "reportedIssuesSelected" class="optionsSelected"><img class="icon" src={{reportedIcon}}>Reported</div>
+                <div *ngIf = "allIssuesSelected == false" class="options"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
+                <div *ngIf = "allIssuesSelected" class="optionsSelected"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
+            </div>
+        </div>
+        <div class="col">
+            <div *ngIf="sideNavSwitch" class="sideNavClose" (click)="sideNavFlag()">
+                <div class="btnDot"></div>
+                <div class="btnDot"></div>
+                <div class="btnDot"></div>
+            </div>
+        </div>
+        <div class="col d-flex">
+            <div class="col-3">New</div>
+            <div class="col-3">Backlog</div>
+            <div class="col-3">In Progress</div>
+            <div class="col-3">Done</div>
+        </div>
+    </div>
+</div>

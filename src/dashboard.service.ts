@@ -7,8 +7,8 @@ import { CookieService } from 'ngx-cookie-service';
 })
 export class DashboardService {
 
-  public issueUrl = "http://localhost:3000/api/v1/issue";
-  // public issueUrl = "http://api.webdevk.com/api/v1/issue";
+  public issueUrl = "http://localhost:3000/api/v1/issues";
+  // public issueUrl = "http://api.webdevk.com/api/v1/issues";
 
   constructor(private _http : HttpClient, private cookies : CookieService) { }
 
@@ -26,6 +26,22 @@ export class DashboardService {
     .set('statusFilter', data.filter)
     .set('skip', data.skip)
     return this._http.put(`${this.issueUrl}/getAllIssues?authToken=${this.cookies.get('authToken')}`, getAllIssuesParams);
+  }
+
+  //get all issues with filters
+  public getWatchingIssues = (data):any=>{
+    let getAllIssuesParams = new HttpParams()
+    .set('statusFilter', data.filter)
+    .set('skip', data.skip)
+    return this._http.put(`${this.issueUrl}/getWatchingISsues?authToken=${this.cookies.get('authToken')}`, getAllIssuesParams);
+  }
+  
+  //get all issues with filters
+  public getReportedIssues = (data):any=>{
+    let getAllIssuesParams = new HttpParams()
+    .set('statusFilter', data.filter)
+    .set('skip', data.skip)
+    return this._http.put(`${this.issueUrl}/getReportedIssues?authToken=${this.cookies.get('authToken')}`, getAllIssuesParams);
   }
 
   //create a new issue
@@ -102,10 +118,8 @@ export class DashboardService {
   //delete comment made by the logged in user
   public deleteComment = (commentId):any=>{
     let deleteCommentParams = new HttpParams()
+    .set('commentId', commentId)
+    return this._http.put(`${this.issueUrl}/deleteComment?authToken=${this.cookies.get('authToken')}`, deleteCommentParams);
     
   }
-
-  
-
-
 }
