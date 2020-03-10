@@ -27,7 +27,7 @@
 
     <!-- display for mobile screen -->
     <div class="row d-xs-flex d-sm-none">        
-        <div class="col sideNavBar">
+        <!-- <div class="col sideNavBar">
             <div *ngIf="sideNavSwitch==false" class="sideNavBtn" (click)="sideNavFlag()">
                 <div class="btnDot"></div>
                 <div class="btnDot"></div>
@@ -43,19 +43,105 @@
                 <div *ngIf = "allIssuesSelected == false" class="options"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
                 <div *ngIf = "allIssuesSelected" class="optionsSelected"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
             </div>
+        </div> -->
+        
+        <div class="col d-flex" style="background-color: rgb(241, 241, 241);">
+            <div class="col" style="max-width:4rem; height:3.5rem;">
+                <div  class="sideNavClose" (click)="sideNavFlag()">
+                    <div class="btnDot"></div>
+                    <div class="btnDot"></div>
+                    <div class="btnDot"></div>
+                </div>
+            </div>
+            <div *ngIf="filter != 'new'" class="col filter">New</div>
+            <div *ngIf="filter == 'new'" class="col filterSelected">New</div>
+            <div *ngIf="filter != 'backlog'" class="col filter">Backlog</div>
+            <div *ngIf="filter == 'backlog'" class="col filterSelected">Backlog</div>
+            <div *ngIf="filter != 'in-progress'" class="col filter">In Progress</div>
+            <div *ngIf="filter == 'in-progress'" class="col filterSelected">In Progress</div>
+            <div *ngIf="filter != 'done'" class="col filter">Done</div>
+            <div *ngIf="filter == 'done'" class="col filterSelected">Done</div>
         </div>
-        <div class="col">
-            <div *ngIf="sideNavSwitch" class="sideNavClose" (click)="sideNavFlag()">
-                <div class="btnDot"></div>
-                <div class="btnDot"></div>
-                <div class="btnDot"></div>
+        <div *ngIf="sideNavSwitch" class="col-12 d-flex" style="background-color: rgb(241, 241, 241);">
+            <div class="sideNavOptions">
+                <div *ngIf = "assignedIssuesSelected == false" class="options"><img class="icon" src={{assignIcon}}>Assigned</div>
+                <div *ngIf = "assignedIssuesSelected == true" class="optionsSelected"><img class="icon" src={{assignIcon}}>Assigned</div>
+                <div *ngIf = "watchingIssuesSelected == false" class="options"><img class="icon" src={{watchingIcon}}>Watching</div>
+                <div *ngIf = "watchingIssuesSelected" class="optionsSelected"><img class="icon" src={{watchingIcon}}>Watching</div>
+                <div *ngIf = "reportedIssuesSelected == false" class="options"><img class="icon" src={{reportedIcon}}>Reported</div>
+                <div *ngIf = "reportedIssuesSelected" class="optionsSelected"><img class="icon" src={{reportedIcon}}>Reported</div>
+                <div *ngIf = "allIssuesSelected == false" class="options"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
+                <div *ngIf = "allIssuesSelected" class="optionsSelected"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
+                <button class = "createIssue" data-toggle="modal" data-target="#createIssueModal">Create Issue</button>
+            </div>
+            <div class="dashboard">
+                <div *ngIf="filter == 'new'" class="issueTable">
+                    <div *ngFor = "let issue of newIssues">{{issue.title}}</div>
+                </div>
             </div>
         </div>
-        <div class="col d-flex">
-            <div class="col-3">New</div>
-            <div class="col-3">Backlog</div>
-            <div class="col-3">In Progress</div>
-            <div class="col-3">Done</div>
+        <div *ngIf="sideNavSwitch == false" class="col-12 dashboard">
+
         </div>
     </div>
 </div>
+
+<!-- ============================= modals ============================= -->
+
+<!-- =============== modal for create issue =========================== -->
+<div class="modal fade" id="createIssueModal" tabindex="-1" role="dialog" aria-labelledby="createIssue" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createIssue">Create New Issue</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form>
+              <div class="form-group"> 
+                <label>
+                    Title
+                </label>
+                <input type="text" name="newTitle" [(ngModel)]="newTitle" class="form-control"
+                #newtitle = "ngModel" placeholder="enter new issue title here" required autofocus>
+              </div>
+              <div [hidden]= "newtitle.valid || newtitle.pristine" class = "alert alert-danger">please enter a valid issue title
+              </div>
+              <div class="form-group">
+                <label>
+                    Description
+                </label>
+                <input type="text" name="newDescription" [(ngModel)]="newDescription" class="form-control"
+                #newdescription = "ngModel" placeholder="enter issue description here" required autofocus>
+              </div>
+              <div [hidden]= "newdescription.valid || newdescription.pristine" class = "alert alert-danger">please enter a description
+              </div>
+              <div class="form-group">
+                  <label>
+                      Assign issue to
+                  </label>
+                  <input type = "text" name = "assignedToUser" [(ngModel)]="assignedToUser" class="form-control"
+                  #assignissuetoid = "ngModel" placeholder="select assignee from drop down below" required autofocus>
+                  <button type="button" id="availableAssignees" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    <a>Select Members</a>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="availableAssignees">
+                    <div style="margin-left: 5px; border-bottom: 1px solid rgb(185, 185, 185); max-width: fit-content;">
+                        available users</div>
+                    <div *ngFor="let user of allUsers" class="dropdown-item dropper" (click)="selectedAssignee(user.userId, user.firstName, user.lastName)">
+                        {{user.firstName}} {{user.lastName}}
+                    </div>
+                </div>
+              </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" (click) = "createNewIssue()">create issue</button>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -23,15 +23,21 @@ export class AllIssuesComponent implements OnInit {
   public authToken : string;
   public userName : string;
   public userId : string;
+  public filter : string;
+  public newTitle : string;
+  public newDescription : string;
+  public assignIssueToId : string;
+  public assignedToUser : string;
   public sideNavSwitch : boolean;
   public assignedIssuesSelected : boolean;
   public watchingIssuesSelected : boolean;
   public reportedIssuesSelected : boolean;
   public allIssuesSelected : boolean;
-  public assignedNewIssues:any[] = [];
-  public assignedBacklogIssues:any[] = [];
-  public assignedInProgressIssues : any[] = [];
-  public assignedDoneIssues : any[] = [];
+  public newIssues:any[] = [];
+  public backlogIssues:any[] = [];
+  public inProgressIssues : any[] = [];
+  public doneIssues : any[] = [];
+  public allUsers:any[]=[];
 
   constructor(private dashboard: DashboardService, private userService : UserService, private cookies : CookieService, private toaster : ToastrService, private spinner : NgxSpinnerService ) { }
 
@@ -53,7 +59,9 @@ export class AllIssuesComponent implements OnInit {
     this.watchingIssuesSelected = false;
     this.reportedIssuesSelected = false;
     this.allIssuesSelected = false;
+    this.assignedToUser = "";
 
+    this.getAllUsers();
     this.getAssignedIssues("new");
   }
 
@@ -69,37 +77,79 @@ export class AllIssuesComponent implements OnInit {
     console.log(data);
     this.dashboard.getAssignedIssues(data).subscribe(
       data=>{
+        this.filter = "new";
+        console.log(data);
         this.assignedIssuesSelected= true;
-        if(filter == "new"){
-          this.assignedNewIssues = data.data;
-          this.assignedBacklogIssues = [];
-          this.assignedInProgressIssues = [];
-          this.assignedDoneIssues = [];
+        if(filter == "new" && data.status == 200){
+          this.filter = "new";
+          this.newIssues = data.data;
+          this.backlogIssues = [];
+          this.inProgressIssues = [];
+          this.doneIssues = [];
           // this.toaster.info("showing new issues assigned to you");
-        }else if(filter == "backlog"){
-          this.assignedNewIssues = [];
-          this.assignedBacklogIssues = data.data;
-          this.assignedInProgressIssues = [];
-          this.assignedDoneIssues = [];
+        }else if(filter == "backlog" && data.status == 200){
+          this.filter = "backlog";
+          this.newIssues = [];
+          this.backlogIssues = data.data;
+          this.inProgressIssues = [];
+          this.doneIssues = [];
           this.toaster.info("showing backlog issues assigned to you");
-        }else if(filter == "in-progress"){
-          this.assignedNewIssues = [];
-          this.assignedBacklogIssues = [];
-          this.assignedInProgressIssues = data.data;
-          this.assignedDoneIssues = [];
+        }else if(filter == "in-progress" && data.status == 200){
+          this.filter = "in-progress";
+          this.newIssues = [];
+          this.backlogIssues = [];
+          this.inProgressIssues = data.data;
+          this.doneIssues = [];
           this.toaster.info("showing in-progress issues assigned to you");
-        }else if(filter == "done"){
-          this.assignedNewIssues = [];
-          this.assignedBacklogIssues = [];
-          this.assignedInProgressIssues = [];
-          this.assignedDoneIssues = data.data;
+        }else if(filter == "done" && data.status == 200){
+          this.filter = "done";
+          this.newIssues = [];
+          this.backlogIssues = [];
+          this.inProgressIssues = [];
+          this.doneIssues = data.data;
           this.toaster.info("showing done issues assigned to you");
         }else if(data.status != 200){
-          this.toaster.warning(data.error);
+          this.toaster.warning(data.message);
         }
       }
     )
   }
+
+  //create new issue 
+  public createNewIssue = ()=>{
+    let newIssueParam = {
+        issueTitle : this.newTitle,
+        issueDescription : this.newDescription,
+        assignedToId : this.assignIssueToId
+    }
+    console.log(newIssueParam);
+    this.dashboard.createIssue(newIssueParam).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.toaster.success(data.message);
+          
+        }else{
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+  //--------------------Http calls using user service----------------
+
+  public getAllUsers = ()=>{
+    this.userService.getAllUserDetails().subscribe(
+      data=>{
+        if(data.status == 200){
+          console.log(data);
+          this.allUsers = data.data;
+        }else{
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
 
   //-----------------------------------------------------------------
   //-------------------------re-usable functions---------------------
@@ -111,6 +161,12 @@ export class AllIssuesComponent implements OnInit {
     }else if(this.sideNavSwitch == false){
       this.sideNavSwitch = true;
     }
+  }
+
+  public selectedAssignee = (userId, firstName, lastName)=>{
+    console.log(userId);
+    this.assignIssueToId = userId;
+    this.assignedToUser = `${firstName} ${lastName}`
   }
   
   public logout = ()=>{

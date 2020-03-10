@@ -30,7 +30,7 @@
     background-color: rgb(241, 241, 241);
 }
 
- .sideNavBtn{
+ /* .sideNavBtn{
     position: fixed;
     top : 3.8rem;
     padding : 4px;
@@ -44,12 +44,10 @@
 .sideNavBtn:hover{
     transition: 1s;
     background-color: rgb(122, 122, 122);
-}
+} */
 
 .sideNavClose{
     position: absolute;
-    top : 0.4rem;
-    left : 8.5rem;
     padding : 4px;
     margin : 10px;
     background-color: rgb(92, 91, 91);
@@ -72,18 +70,20 @@
     cursor: pointer;
 }
 
-.sideNavBar .sideNavOptions{
+ .sideNavOptions{
     position : relative;
     margin : 2rem;
-    top: 6rem;
+    max-width: fit-content;
+    height: inherit;
 }
 
-.sideNavBar .sideNavOptions .options{
+ .sideNavOptions .options{
     font-weight: 500;
     padding : 3px;
+    width : max-content;
 }
 
-.sideNavBar .sideNavOptions .optionsSelected{
+ .sideNavOptions .optionsSelected{
     font-weight: 500;
     padding : 3px;
     background-color: rgb(132, 238, 206);
@@ -92,7 +92,41 @@
 }
 
 .filter{
-    width : 25vw;
-    height : 4rem;
+    width : max-content;
+    height : inherit;
+    border-radius: 7px;
     background-color:rgb(241, 241, 241);
+    border-left: 2px solid rgb(204, 204, 204);
+    border-bottom: 2px solid rgb(204, 204, 204);
+    padding: 10px;
+    text-align: center;
+    font-weight: 400;
+}
+
+.filterSelected{
+    width : max-content;
+    height : inherit;
+    border-radius: 7px;
+    background-color:rgb(132, 238, 206);
+    border-left: 2px solid rgb(204, 204, 204);
+    border-bottom: 2px solid rgb(204, 204, 204);
+    padding: 10px;
+    text-align: center;
+    font-weight: 400;
+}
+
+.createIssue{
+    margin-top: 1rem;
+    border-radius: 8px;
+    cursor: pointer;    
+}
+
+.createIssue:hover{
+    background-color: rgb(132, 238, 206);
+}
+
+.dashboard{
+    background-color: rgb(241, 241, 241);
+    width : 100%;
+    height : 90vh;
 }
