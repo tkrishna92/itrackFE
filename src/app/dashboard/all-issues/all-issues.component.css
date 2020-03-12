@@ -1,5 +1,39 @@
+/* *{
+    box-sizing: border-box;
+} */
+
+::-webkit-scrollbar{
+    width : 1px;
+}
+
+::-webkit-scrollbar-corner{
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-button{
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-track{
+    background-color:transparent;
+}
+
 .container-fluid{
     padding:0;
+}
+
+.smallScreenUser{
+    background-color: rgb(132, 238, 206);
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+
+.smallScreenUser:hover{
+    background-color: rgb(166, 255, 228);
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1px solid grey;
 }
 
 .icon{
@@ -73,7 +107,7 @@
  .sideNavOptions{
     position : relative;
     margin : 2rem;
-    max-width: fit-content;
+    max-width: max-content;
     height: inherit;
 }
 
@@ -86,6 +120,7 @@
  .sideNavOptions .optionsSelected{
     font-weight: 500;
     padding : 3px;
+    width : max-content;
     background-color: rgb(132, 238, 206);
     border : 1px solid rgb(80, 80, 80);
     border-radius: 5px;
@@ -128,5 +163,42 @@
 .dashboard{
     background-color: rgb(241, 241, 241);
     width : 100%;
-    height : 90vh;
+    height : 95vh;
+
+}
+
+.issue{
+    border : 1px solid grey;
+    border-radius: 5px;
+    background-color: white;
+    padding : 5px;
+    margin-top : 8px;
+    margin-left : 5px;
+    display: flex;
+    overflow: scroll;
+    max-height: max-content;
+    box-shadow: 2px 2px 4px 3px rgb(190, 190, 190);
+}
+
+.issueTable{
+    margin : 5px;
+    padding : 5px;
+    height : 80vh;
+    border-bottom: 1px solid grey;
+    box-shadow : 1px 2px 3px 4px solid grey;
+    overflow: scroll;
+}
+
+.pagination{
+    margin : 5px;
+    padding : 5px;
+}
+
+.page{
+    width : max-content;
+    height : max-content;
+    padding : 5px;
+    background-color:rgb(255, 255, 255);
+    border : 1px solid black;
+    font-weight: 700;
 }
