@@ -3,7 +3,7 @@
         <div class="col-md-12 navBar">
             <nav class="navbar navbar-expand-md navbar-light" style="background-color: rgb(227, 228, 230);">
                 <a class="navbar-brand brand" href="dashboard"><span style="font-size: larger;">i</span>TracK</a>
-                <div class="dropdown show d-none d-sm-block" style="margin-top: 1rem;">
+                <div class="dropdown show d-none d-sm-block ml-auto" style="margin-top: 1rem; margin-right: 3rem;">
                     <a class="btn dropdown-toggle" href="#" role="button" id="smallScreenUserOptions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         {{userName}}
                     </a>
@@ -56,9 +56,9 @@
                     </div>
                 </div>
             </div>
-            <div class="dashboard">
+            <div *ngIf="currentIssue.length == 0" class="dashboard">
                 <div class="issueTable">
-                    <div *ngFor = "let issue of retreivedIssues" class = "issue">
+                    <div *ngFor = "let issue of retreivedIssues" class = "issue" (click)="selectCurrentIssue(issue.issueId)">
                         <div class = "row" style="min-height : fit-content; max-height: max-content; overflow-x: hidden; overflow-y: scroll;">
                             <div class = "col-3" style="margin : 2px; max-height: 4rem; overflow: hidden;">
                                 <a style="font-weight: 500;">{{issue.title}}</a>
@@ -74,14 +74,67 @@
                     </div>
                 </div>
                 <div class="pagination">
-                    <div class="page">1</div>
+                    <div *ngFor="let page of pages" class="page" (click)="getPagesIssues(page)">{{page}}</div>
+                </div>
+            </div>
+            <div *ngIf="currentIssue.length > 1" class="selectedIssue">
+                <div class="issueDetails">
+                    <h4>
+                        <span style="color : rgb(23, 230, 168); font-weight: 400;"> 
+                            {{selectedIssueDetails[0].reporterName}}
+                        </span>
+                        : {{selectedIssueDetails[0].title}}
+                    </h4>
+                    <p>
+                        {{selectedIssueDetails[0].description}}
+                    </p>
+                   <div class="row d-flex">
+                        <div class="col-6">
+                            <span>
+                                Assigned To : 
+                            </span>
+                            {{selectedIssueDetails[0].assigneeName}}
+                        </div>
+                        <div class="col-6">                            
+                            <div class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="watchedBy" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                watched by
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="watchedBy">
+                                <a *ngFor = "let watcher of watchersList" class="dropdown-item">{{watcher}}</a>
+                                </div>
+                            </div>
+                            <div class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="assignTo" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Re-Assign To
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="assignTo">
+                                    <a *ngFor = "let user of allUsers" class="dropdown-item p-0 m-0" style="text-align: center;" (click)="reassignTo(user.userId, currentIssue)">
+                                        <span *ngIf = "user.userId != selectedIssueDetails[0].assignedToId">
+                                            {{user.firstName}} {{user.lastName}}
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div *ngIf = "watchingCurrentIssue == false" class="dropdown p-1" (click)="addToWatchList(currentIssue)">
+                                <button class="btn btn-secondary btn-sm">
+                                Watch Issue
+                                </button>                                
+                            </div>
+                        </div>
+                   </div>
+                   <div class="row d-flex">
+                       <div class="col">
+                            
+                       </div>
+                   </div>
                 </div>
             </div>
         </div>
         <div *ngIf="sideNavSwitch == false" class="col-12 dashboard">
-            <div class="dashboard">
+            <div *ngIf = "currentIssue.length == 0" class="dashboard">
                 <div class="issueTable">
-                    <div *ngFor = "let issue of retreivedIssues" class = "issue">
+                    <div *ngFor = "let issue of retreivedIssues" class = "issue" (click)="selectCurrentIssue(issue.issueId)">
                         <div class = "row">
                             <div class = "col-3" style="max-height: 4rem; overflow: hidden;">
                                 <a style="font-weight: 500;">{{issue.title}}</a>
@@ -98,6 +151,9 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="pagination">
+                    <div *ngFor="let page of pages" class="page" (click)="getPagesIssues(page)">{{page}}</div>
                 </div>
             </div>
         </div>

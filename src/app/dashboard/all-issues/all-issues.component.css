@@ -164,7 +164,6 @@
     background-color: rgb(241, 241, 241);
     width : 100%;
     height : 95vh;
-
 }
 
 .issue{
@@ -201,4 +200,21 @@
     background-color:rgb(255, 255, 255);
     border : 1px solid black;
     font-weight: 700;
+    margin : 3px;
+    box-shadow: 1px 1px 2px 2px rgb(189, 189, 189);
+}
+
+.selectedIssue{
+    background-color: rgb(241, 241, 241);
+    width : 100%;
+    height : 95vh;
+}
+
+.issueDetails{
+    margin : 5px;
+    padding : 5px;
+    height : 80vh;
+    border-bottom: 1px solid grey;
+    box-shadow : 1px 2px 3px 4px solid grey;
+    overflow: scroll;
 }

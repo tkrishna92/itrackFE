@@ -29,13 +29,18 @@ export class AllIssuesComponent implements OnInit {
   public assignIssueToId : string;
   public assignedToUser : string;
   public issuesSelected : string;
-  public pages : number;
+  public currentIssue : string;
+  public pagesCount : number;
   public sideNavSwitch : boolean;
   public assignedIssuesSelected : boolean;
   public watchingIssuesSelected : boolean;
   public reportedIssuesSelected : boolean;
+  public watchingCurrentIssue :boolean;
   public retreivedIssues : any[] = [];
   public allUsers:any[]=[];
+  public pages:any[]=[];
+  public selectedIssueDetails:any[] = [];
+  public watchersList:any[] = [];
 
   constructor(private dashboard: DashboardService, private userService : UserService, private cookies : CookieService, private toaster : ToastrService, private spinner : NgxSpinnerService ) { }
 
@@ -58,7 +63,9 @@ export class AllIssuesComponent implements OnInit {
     this.reportedIssuesSelected = false;
     this.issuesSelected = "assigned";
     this.assignedToUser = "";
-    this.pages = 0;
+    this.currentIssue = "";
+    this.pagesCount = 1;
+    this.pages = [0];
 
     this.getAllUsers();
     setTimeout(()=>{
@@ -82,14 +89,7 @@ export class AllIssuesComponent implements OnInit {
       data=>{
         this.retreivedIssues = [];
         this.filter = filter;
-        console.log(data);
-        if(data.count>10){
-          this.pages = Math.floor(data.count/10);
-          console.log(this.pages);
-        }else{
-          this.pages = 0;
-          console.log(this.pages)
-        }
+        this.createPages(data.count);
         this.issuesSelected= "assigned";
         if(filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
@@ -123,7 +123,7 @@ export class AllIssuesComponent implements OnInit {
       data=>{
         this.retreivedIssues = [];
         this.filter = filter;
-        console.log(data);
+        this.createPages(data.count);
         this.issuesSelected= "watching";
         if(filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
@@ -157,7 +157,7 @@ export class AllIssuesComponent implements OnInit {
       data=>{
         this.retreivedIssues = [];
         this.filter = filter;
-        console.log(data);
+        this.createPages(data.count);
         this.issuesSelected= "reported";
         if(filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
@@ -191,7 +191,7 @@ export class AllIssuesComponent implements OnInit {
       data=>{
         this.retreivedIssues = [];
         this.filter = filter;
-        console.log(data);
+        this.createPages(data.count);
         this.issuesSelected= "allIssues";
         if(filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
@@ -235,6 +235,37 @@ export class AllIssuesComponent implements OnInit {
     )
   }
 
+  //assign issue to another user
+  public reassignTo= (userId, issueId)=>{
+    let data = {
+      issueId : issueId,
+      assignToId : userId
+    }
+    this.dashboard.assignIssue(data).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.toaster.success(data.message);
+        }else{
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+  //add issue to logged in user's watch list
+  public addToWatchList = (issueId)=>{
+    this.dashboard.watchIssue(issueId).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.toaster.success(data.message);
+        }else {
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+
   //--------------------Http calls using user service----------------
 
   public getAllUsers = ()=>{
@@ -264,6 +295,7 @@ export class AllIssuesComponent implements OnInit {
   }
 
   public setFilter = (filter?)=>{
+    this.currentIssue = "";
     this.filter = filter;
     if(this.issuesSelected == "assigned"){
       this.getAssignedIssues(filter);
@@ -277,6 +309,7 @@ export class AllIssuesComponent implements OnInit {
   }
 
   public getIssues = (selectedIssueType)=>{
+    this.currentIssue = "";
     this.issuesSelected = selectedIssueType;
     if(this.issuesSelected == "assigned"){
       this.getAssignedIssues(this.filter);
@@ -286,6 +319,19 @@ export class AllIssuesComponent implements OnInit {
       this.getReportedIssues(this.filter);
     }else if(this.issuesSelected == "allIssues"){
       this.getAllIssues(this.filter);
+    }
+  }
+
+  public getPagesIssues= (skip)=>{
+    this.currentIssue = "";
+    if(this.issuesSelected == "assigned"){
+      this.getAssignedIssues(this.filter, skip);
+    }else if(this.issuesSelected == "watching"){
+      this.getWatchingIssues(this.filter, skip);
+    }else if(this.issuesSelected == "reported"){
+      this.getReportedIssues(this.filter, skip);
+    }else if(this.issuesSelected == "allIssues"){
+      this.getAllIssues(this.filter, skip);
     }
   }
 
@@ -303,16 +349,55 @@ export class AllIssuesComponent implements OnInit {
         }else if(this.allUsers[user].userId == issue.reporterId && this.allUsers[user].userId != issue.assignedToId){
           issue["reporterName"] =`${this.allUsers[user].firstName} ${this.allUsers[user].lastName}`;
         }
-      }
+      }      
     }
   }
   
+  //function to create pages
+  public createPages = (count)=>{
+    this.pages = [];
+    if(count>10){
+      this.pagesCount = Math.floor(count/10)+1;
+      for(let i = 0; i < this.pagesCount; i++ ){
+        this.pages.push(i);
+      }
+    }else{
+      this.pagesCount = 1;
+      this.pages = [0];
+    }
+  }
 
   public selectedAssignee = (userId, firstName, lastName)=>{
     this.assignIssueToId = userId;
     this.assignedToUser = `${firstName} ${lastName}`
   }
   
+//------------------------------------------------------------------------------
+//--------------------------------------single issue functions------------------
+//------------------------------------------------------------------------------
+
+//select signle issue
+public selectCurrentIssue = (issueId)=>{
+  this.currentIssue = issueId;
+  this.watchersList = [];
+  this.retreivedIssues.map((issue)=>{
+    if(issue.issueId == issueId){
+      this.selectedIssueDetails[0] = issue;      
+      console.log(this.selectedIssueDetails);
+      for(let watcher of issue.watchersId){
+        this.watchingCurrentIssue = (watcher == this.userId)?true:false;
+        for(let user of this.allUsers){
+          if(user.userId == watcher){
+            this.watchersList.push(`${user.firstName} ${user.lastName}`)
+          }
+        }
+      }
+    }
+  })
+  console.log(this.watchersList);
+}
+
+
   public logout = ()=>{
 
   }
