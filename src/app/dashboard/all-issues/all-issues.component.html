@@ -55,6 +55,12 @@
                         <a class="dropdown-item" (click)="logout()">Logout</a>
                     </div>
                 </div>
+                <div>
+                    <form class="form-inline my-2 my-lg-0">
+                        <input class="form-control mr-sm-2" type="search" placeholder="Search titles" aria-label="Search" name="titleSearchString" [(ngModel)]="titleSearchString" (keydown)="searchOnKeyPress($event)">
+                        <!-- <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button> -->
+                      </form>
+                </div>
             </div>
             <div *ngIf="currentIssue.length == 0" class="dashboard">
                 <div class="issueTable">
@@ -88,12 +94,20 @@
                     <p>
                         {{selectedIssueDetails[0].description}}
                     </p>
-                   <div class="row d-flex">
+                   <div class="row d-flex" style="padding-bottom : 5px; border-bottom: 1px solid grey;">
                         <div class="col-6">
-                            <span>
-                                Assigned To : 
-                            </span>
-                            {{selectedIssueDetails[0].assigneeName}}
+                            <div >
+                                <span style="font-weight: 500;">
+                                    Assigned To : 
+                                </span>
+                                {{selectedIssueDetails[0].assigneeName}}
+                            </div>
+                            <div >
+                                <span style="font-weight: 500;">
+                                    createdOn : 
+                                </span>
+                                {{selectedIssueDetails[0].createdOn.split("T")[0]}}
+                            </div>
                         </div>
                         <div class="col-6">                            
                             <div class="dropdown p-1">
@@ -121,14 +135,39 @@
                                 Watch Issue
                                 </button>                                
                             </div>
+                            <div *ngIf = "selectedIssueDetails[0].reporterId == userId || selectedIssueDetails[0].assignedToId == userId" class="dropdown p-1" (click)="deleteIssue(currentIssue)">
+                                <button class="btn btn-secondary btn-sm">
+                                Delete Issue
+                                </button>                                
+                            </div>
+                            <div *ngIf = "selectedIssueDetails[0].reporterId == userId || selectedIssueDetails[0].assignedToId == userId" class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="changeStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Change Status
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="changeStatus">
+                                        <a *ngFor = "let status of availableStatus" class="dropdown-item p-0 m-0" style="text-align: center;" (click)="changeIssueStatus(status)">
+                                            <span *ngIf = "status != filter">
+                                                {{status}}
+                                            </span>
+                                        </a>
+                                    </div>                                
+                            </div>
+                            <button class = "btn btn-secondary btn-sm m-1" data-toggle="modal" data-target="#editIssueModal">Edit Issue</button>
                         </div>
                    </div>
-                   <div class="row d-flex">
-                       <div class="col">
-                            
+                   <div class="row d-flex commentBox" style="margin : 1rem;">
+                        <h5>Comments</h5>
+                       <div *ngFor = "let comment of issueComments" class="col-12 comments">
+                           <div>
+                                <a><span style="color : rgb(23, 230, 168); font-weight: 400;">{{comment.commenterName}} :</span> {{comment.comment}} </a>
+                            </div>
+                            <div style="margin: 0.2rem;" class="d-flex justify-content-between">
+                                <p style="color: rgb(138, 138, 138); margin:0;">posted on : <span>{{comment.createdOn.split("T")[0]}}</span></p>
+                                <img *ngIf = "comment.commenterId == userId" class="icon" src={{deleteIcon}} (click)="deleteComment(comment.commentId)">
+                            </div>
                        </div>
-                   </div>
-                </div>
+                   </div>                   
+                </div>                
             </div>
         </div>
         <div *ngIf="sideNavSwitch == false" class="col-12 dashboard">
@@ -156,6 +195,17 @@
                     <div *ngFor="let page of pages" class="page" (click)="getPagesIssues(page)">{{page}}</div>
                 </div>
             </div>
+        </div>
+        <div *ngIf="currentIssue.length > 1" class="col-12 createCommentbox">
+            <form>
+                <div class="form-group">
+                     <h4>Create Comment</h4>
+                     <textarea name="newComment" [(ngModel)]="newComment" class="form-control"
+                     required autofocus placeholder="enter comment here...">                         
+                     </textarea>
+                </div>                
+            </form>
+            <div class="btn btn-secondary btn-sm" (click)="createComment()">comment</div>
         </div>
     </div>
 </div>
@@ -215,6 +265,46 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" data-dismiss="modal" (click) = "createNewIssue()">create issue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- =============== modal for edit issue =========================== -->
+<div class="modal fade" id="editIssueModal" tabindex="-1" role="dialog" aria-labelledby="editIssue" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editIssue">Edit Issue</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form>
+              <div class="form-group"> 
+                <label>
+                    Title
+                </label>
+                <input type="text" name="editedTitle" [(ngModel)]="editedTitle" class="form-control"
+                #edittitle = "ngModel" required autofocus>
+              </div>
+              <div [hidden]= "edittitle.valid || edittitle.pristine" class = "alert alert-danger">please enter a valid issue title
+              </div>
+              <div class="form-group">
+                <label>
+                    Description
+                </label>
+                <input type="text" name="editedDescription" [(ngModel)]="editedDescription" class="form-control"
+                #editdescription = "ngModel" placeholder="enter issue description here" required autofocus>
+              </div>
+              <div [hidden]= "editdescription.valid || editdescription.pristine" class = "alert alert-danger">please enter a description
+              </div>              
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal" (click) = "editIssue()">edit issue</button>
         </div>
       </div>
     </div>

@@ -4,11 +4,14 @@ import { UserService } from 'src/user.service';
 import { CookieService } from 'ngx-cookie-service';
 import { ToastrService } from 'ngx-toastr';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { Router } from '@angular/router';
+import { SocketService } from 'src/socket.service';
 
 @Component({
   selector: 'app-all-issues',
   templateUrl: './all-issues.component.html',
-  styleUrls: ['./all-issues.component.css']
+  styleUrls: ['./all-issues.component.css'],
+  providers : [SocketService]
 })
 export class AllIssuesComponent implements OnInit {
 
@@ -19,6 +22,7 @@ export class AllIssuesComponent implements OnInit {
   public watchingIcon : string = "assets/icons/watching.png"
   public reportedIcon : string = "assets/icons/reported.png"
   public allIssuesIcon : string = "assets/icons/allIssues.png"
+  public deleteIcon : string = "assets/icons/delete.png"
 
   public authToken : string;
   public userName : string;
@@ -29,8 +33,14 @@ export class AllIssuesComponent implements OnInit {
   public assignIssueToId : string;
   public assignedToUser : string;
   public issuesSelected : string;
-  public currentIssue : string;
+  public currentIssue : string;  
+  public editedTitle : string;
+  public editedDescription :string;
+  public selectedStatus : string;
+  public newComment : string;
+  public titleSearchString : string;
   public pagesCount : number;
+  public currentCommentSkip : number;
   public sideNavSwitch : boolean;
   public assignedIssuesSelected : boolean;
   public watchingIssuesSelected : boolean;
@@ -41,8 +51,10 @@ export class AllIssuesComponent implements OnInit {
   public pages:any[]=[];
   public selectedIssueDetails:any[] = [];
   public watchersList:any[] = [];
+  public availableStatus :any[] = [];
+  public issueComments : any[] = [];
 
-  constructor(private dashboard: DashboardService, private userService : UserService, private cookies : CookieService, private toaster : ToastrService, private spinner : NgxSpinnerService ) { }
+  constructor(private dashboard: DashboardService, private userService : UserService, private cookies : CookieService, private toaster : ToastrService, private spinner : NgxSpinnerService, private router : Router, private socketService : SocketService ) { }
 
   ngOnInit(): void {
 
@@ -66,13 +78,48 @@ export class AllIssuesComponent implements OnInit {
     this.currentIssue = "";
     this.pagesCount = 1;
     this.pages = [0];
+    this.availableStatus = ["new", "backlog", "in-progress", "done"];
 
+    this.verifyUser();
     this.getAllUsers();
     setTimeout(()=>{
+      this.joinAllIssueRooms();
       this.getAssignedIssues("new");
+      this.getIssueNotification();
     },10);
     
   }
+
+  //-----------------------------------------------------------------
+  //--------------------------------Socket functions-----------------
+  //-----------------------------------------------------------------
+
+  //verifyUser event handler
+  public verifyUser = ()=>{
+    this.socketService.verifyUser().subscribe(
+      data =>{
+        console.log("verifyUser received");
+        this.socketService.checkAuthToken(this.authToken)
+      }
+    )
+  }
+
+  //joining issue room to get notifications on issue
+  public joinIssueRoom = (issue)=>{
+    this.socketService.joinIssueRooms(issue)
+  }
+
+  //handle issue notifications received on watching issues
+  public getIssueNotification = ()=>{
+    this.socketService.getIssueNotification().subscribe(
+      data=>{
+        console.log(data);
+        this.toaster.info(data.notification);
+      }
+    )
+  }
+  
+  
 
   //-----------------------------------------------------------------
   //--------------------------------Http calls-----------------------
@@ -80,27 +127,27 @@ export class AllIssuesComponent implements OnInit {
 
   //get assigned issues
   public getAssignedIssues = (filter, skip?)=>{
+    this.filter = (filter.length>0)?filter:"new";
     let data = {
-      filter : filter,
+      filter : this.filter,
       skip : skip*10
     }
     console.log(data);
     this.dashboard.getAssignedIssues(data).subscribe(
       data=>{
         this.retreivedIssues = [];
-        this.filter = filter;
         this.createPages(data.count);
         this.issuesSelected= "assigned";
-        if(filter == "new" && data.status == 200){
+        if(this.filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
-          // this.toaster.info("showing new issues assigned to you");
-        }else if(filter == "backlog" && data.status == 200){
+          this.toaster.info("showing new issues assigned to you");
+        }else if(this.filter == "backlog" && data.status == 200){
           this.retreivedIssues = data.data;
           this.toaster.info("showing backlog issues assigned to you");
-        }else if(filter == "in-progress" && data.status == 200){
+        }else if(this.filter == "in-progress" && data.status == 200){
           this.retreivedIssues = data.data;
           this.toaster.info("showing in-progress issues assigned to you");
-        }else if(filter == "done" && data.status == 200){
+        }else if(this.filter == "done" && data.status == 200){
           this.retreivedIssues = data.data;
           this.toaster.info("showing done issues assigned to you");
         }else if(data.status != 200){
@@ -114,27 +161,27 @@ export class AllIssuesComponent implements OnInit {
 
   //get assigned issues
   public getWatchingIssues = (filter, skip?)=>{
+    this.filter = (filter.length>0)?filter:"new";
     let data = {
-      filter : filter,
+      filter : this.filter,
       skip : skip*10
     }
     console.log(data);
     this.dashboard.getWatchingIssues(data).subscribe(
       data=>{
         this.retreivedIssues = [];
-        this.filter = filter;
         this.createPages(data.count);
         this.issuesSelected= "watching";
-        if(filter == "new" && data.status == 200){
+        if(this.filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
-          // this.toaster.info("showing new issues being watched by you");
-        }else if(filter == "backlog" && data.status == 200){
+          this.toaster.info("showing new issues being watched by you");
+        }else if(this.filter == "backlog" && data.status == 200){
           this.retreivedIssues = data.data;
           this.toaster.info("showing backlog issues being watched by you");
-        }else if(filter == "in-progress" && data.status == 200){
+        }else if(this.filter == "in-progress" && data.status == 200){
           this.retreivedIssues = data.data;
           this.toaster.info("showing in-progress issues being watched by you");
-        }else if(filter == "done" && data.status == 200){
+        }else if(this.filter == "done" && data.status == 200){
           this.retreivedIssues = data.data;
           this.toaster.info("showing done issues being watched by you");
         }else if(data.status != 200){
@@ -148,29 +195,29 @@ export class AllIssuesComponent implements OnInit {
 
   //get assigned issues
   public getReportedIssues = (filter, skip?)=>{
+    this.filter = (filter.length>0)?filter:"new";
     let data = {
-      filter : filter,
+      filter : this.filter,
       skip : skip*10
     }
     console.log(data);
     this.dashboard.getReportedIssues(data).subscribe(
       data=>{
         this.retreivedIssues = [];
-        this.filter = filter;
         this.createPages(data.count);
         this.issuesSelected= "reported";
-        if(filter == "new" && data.status == 200){
+        if(this.filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
-          // this.toaster.info("showing new issues assigned to you");
-        }else if(filter == "backlog" && data.status == 200){
+          this.toaster.info("showing new issues reported by you");
+        }else if(this.filter == "backlog" && data.status == 200){
           this.retreivedIssues = data.data;
-          this.toaster.info("showing backlog issues assigned to you");
-        }else if(filter == "in-progress" && data.status == 200){
+          this.toaster.info("showing backlog issues reported by you");
+        }else if(this.filter == "in-progress" && data.status == 200){
           this.retreivedIssues = data.data;
-          this.toaster.info("showing in-progress issues assigned to you");
-        }else if(filter == "done" && data.status == 200){
+          this.toaster.info("showing in-progress issues reported by you");
+        }else if(this.filter == "done" && data.status == 200){
           this.retreivedIssues = data.data;
-          this.toaster.info("showing done issues assigned to you");
+          this.toaster.info("showing done issues reported by you");
         }else if(data.status != 200){
           this.retreivedIssues = [];
           this.toaster.warning(data.message);
@@ -181,30 +228,31 @@ export class AllIssuesComponent implements OnInit {
   }
 
   //get assigned issues
-  public getAllIssues = (filter, skip?)=>{
+  public getAllIssues = (filter?, skip?)=>{
+    this.filter = (filter.length>0)?filter:"new";
     let data = {
-      filter : filter,
+      filter : this.filter,
       skip : skip*10
     }
-    console.log(data);
     this.dashboard.getAllIssues(data).subscribe(
       data=>{
+        console.log(data);
+        
         this.retreivedIssues = [];
-        this.filter = filter;
         this.createPages(data.count);
         this.issuesSelected= "allIssues";
-        if(filter == "new" && data.status == 200){
+        if(this.filter == "new" && data.status == 200){
           this.retreivedIssues = data.data;
-          // this.toaster.info("showing new issues assigned to you");
-        }else if(filter == "backlog" && data.status == 200){
+          this.toaster.info("showing all new issues");
+        }else if(this.filter == "backlog" && data.status == 200){
           this.retreivedIssues = data.data;
-          this.toaster.info("showing backlog issues assigned to you");
-        }else if(filter == "in-progress" && data.status == 200){
+          this.toaster.info("showing all backlog issues");
+        }else if(this.filter == "in-progress" && data.status == 200){
           this.retreivedIssues = data.data;
-          this.toaster.info("showing in-progress issues assigned to you");
-        }else if(filter == "done" && data.status == 200){
+          this.toaster.info("showing all in-progress issues");
+        }else if(this.filter == "done" && data.status == 200){
           this.retreivedIssues = data.data;
-          this.toaster.info("showing done issues assigned to you");
+          this.toaster.info("showing all done issues");
         }else if(data.status != 200){
           this.retreivedIssues = [];
           this.toaster.warning(data.message);
@@ -212,6 +260,28 @@ export class AllIssuesComponent implements OnInit {
         this.addNamesToIssues();
       }
     )
+  }
+
+  //search for issue titles
+  public searchOnKeyPress =(event : any)=>{
+    if(event.keyCode === 13 || event.keyCode === 32){
+      console.log(this.titleSearchString);
+      this.dashboard.searchIssueTitle(this.titleSearchString).subscribe(
+        data=>{
+          this.retreivedIssues = [];
+          if(data.status == 200){
+            this.retreivedIssues = data.data;
+            this.createPages(data.count);
+            this.filter = "";
+            this.issuesSelected = "";
+            this.toaster.success(data.message);
+            this.addNamesToIssues();
+          }else{
+            this.toaster.warning(data.message);
+          }
+        }
+      )
+    }
   }
 
   //create new issue 
@@ -228,6 +298,48 @@ export class AllIssuesComponent implements OnInit {
           this.toaster.success(data.message);
           this.filter= "new";
           this.getIssues("reported");
+        }else{
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+  //delete current issue
+  public deleteIssue = (issueId)=>{
+    this.dashboard.deleteIssue(issueId).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.currentIssue = "";
+          this.getIssues(this.issuesSelected);
+          this.toaster.success(data.message);
+        }else{
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+  //edit issue
+  public editIssue = ()=>{
+    let editeIssueData = {
+      issueId : this.currentIssue,
+      title : this.editedTitle,
+      description : this.editedDescription
+    }
+    this.dashboard.editIssue(editeIssueData).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.toaster.success(data.message);
+          this.getIssues(this.issuesSelected);
+          let notification = {
+            issueId : editeIssueData.issueId,
+            notification : `${this.userName} edited ${this.editedTitle}`
+          }
+          this.socketService.sendIssueActionNotification(notification);
+          setTimeout(()=>{
+            this.selectCurrentIssue(editeIssueData.issueId);
+          }, 10);
         }else{
           this.toaster.warning(data.message);
         }
@@ -258,7 +370,93 @@ export class AllIssuesComponent implements OnInit {
       data=>{
         if(data.status == 200){
           this.toaster.success(data.message);
+          this.joinIssueRoom(issueId);
         }else {
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+  //change issue status
+  public changeIssueStatus = (status)=>{
+    this.selectedStatus = status;
+    let data = {
+      issueId : this.currentIssue,
+      newStatus : this.selectedStatus
+    }
+    console.log(data);
+    this.dashboard.changeIssueStatus(data).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.setFilter(this.selectedStatus);
+          this.toaster.success(data.message);
+        }else{
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+  //get all comments of issue
+  public getIssueComments = (issueId, skip?)=>{
+    if(skip > 0){
+      this.currentCommentSkip = skip;
+    }else{
+      this.currentCommentSkip = 0
+    }
+    let data = {
+      issueId : issueId,
+      skip : this.currentCommentSkip
+    }
+    console.log(data);
+    this.dashboard.getIssueComment(data).subscribe(
+      data=>{
+        if(data.status == 200){
+          console.log(data);
+          this.issueComments = data.data;
+          this.issueComments.map((comment)=>{
+            for(let user of this.allUsers){
+              if(comment.commenterId == user.userId){
+                comment["commenterName"] = `${user.firstName} ${user.lastName}`
+              }
+            }
+          })
+        }else{
+          this.toaster.info(data.message);
+        }
+      }
+    )
+  }
+
+  //create a comment on this issue
+  public createComment = ()=>{
+    let data = {
+      issueId : this.currentIssue,
+      comment : this.newComment
+    }
+    console.log(data);
+    this.dashboard.createNewComment(data).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.toaster.success(data.message);
+          this.getIssueComments(this.currentIssue)
+        }else{
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+    this.newComment = ""
+  }
+
+  //delete comment
+  public deleteComment = (commentId)=>{
+    this.dashboard.deleteComment(commentId).subscribe(
+      data=>{
+        if(data.status == 200){
+          this.toaster.success(data.message);
+          this.getIssueComments(this.currentIssue);
+        }else{
           this.toaster.warning(data.message);
         }
       }
@@ -275,7 +473,6 @@ export class AllIssuesComponent implements OnInit {
           this.allUsers = data.data;
         }else{
           this.toaster.warning(data.message);
-
         }
       }
     )
@@ -382,14 +579,25 @@ public selectCurrentIssue = (issueId)=>{
   this.watchersList = [];
   this.retreivedIssues.map((issue)=>{
     if(issue.issueId == issueId){
-      this.selectedIssueDetails[0] = issue;      
+      this.selectedIssueDetails[0] = issue;
+      this.editedTitle = issue.title;
+      this.editedDescription = issue.description;
+      this.getIssueComments(this.currentIssue, 0);
       console.log(this.selectedIssueDetails);
       for(let watcher of issue.watchersId){
-        this.watchingCurrentIssue = (watcher == this.userId)?true:false;
         for(let user of this.allUsers){
           if(user.userId == watcher){
             this.watchersList.push(`${user.firstName} ${user.lastName}`)
           }
+        }
+      }
+      for(let watcher of issue.watchersId){
+        if(watcher == this.userId){
+          console.log(watcher);
+          this.watchingCurrentIssue = true;
+          break;
+        }else{
+          this.watchingCurrentIssue = false;
         }
       }
     }
@@ -397,9 +605,35 @@ public selectCurrentIssue = (issueId)=>{
   console.log(this.watchersList);
 }
 
+//join all the issue rooms that the user is currently watching
+public joinAllIssueRooms = ()=>{
+  this.userService.getSingleUserDetails(this.userId).subscribe(
+    data=>{
+      if(data.status == 200){
+        console.log(data);
+        for(let issue of data.data.watchingIssues){
+          this.joinIssueRoom(issue);
+        }
+      }
+    }
+  )
+}
 
   public logout = ()=>{
-
+    this.userService.logout().subscribe(
+      data=>{
+        if(data.status == 200){
+          this.toaster.success(data.message);
+          this.cookies.delete('authToken');
+          this.cookies.delete('userName');
+          this.cookies.delete('userId');
+          // this.socketService.disconnectSocket();
+          this.router.navigate(['/']);
+        }else{
+          this.toaster.error(data.message);
+        }
+      }
+    )
   }
 
 

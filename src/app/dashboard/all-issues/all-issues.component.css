@@ -108,7 +108,7 @@
     position : relative;
     margin : 2rem;
     max-width: max-content;
-    height: inherit;
+    height: max-content;
 }
 
  .sideNavOptions .options{
@@ -213,8 +213,26 @@
 .issueDetails{
     margin : 5px;
     padding : 5px;
-    height : 80vh;
+    height : 94vh;
     border-bottom: 1px solid grey;
     box-shadow : 1px 2px 3px 4px solid grey;
     overflow: scroll;
+}
+
+.commentBox{
+    margin:1rem;
+    width : 100%;
+    overflow: scroll;
+}
+
+.comments{
+    padding : 1rem;
+    margin : 0.3rem;
+    border-radius: 6px;
+    background-color: rgb(250, 249, 249);
+}
+
+.createCommentbox{
+    background-color:rgb(241, 241, 241);
+    padding : 4rem;
 }

@@ -57,7 +57,7 @@ export class DashboardService {
   public deleteIssue = (issueId):any=>{
     let deleteIssueParams = new HttpParams()
     .set('issueId', issueId)
-    return this._http.put(`${this.issueUrl}/deleteIssue?authToken="${this.cookies.get('authToken')}`, deleteIssueParams);
+    return this._http.put(`${this.issueUrl}/deleteIssue?authToken=${this.cookies.get('authToken')}`, deleteIssueParams);
   }
 
   //edit issue
@@ -120,6 +120,5 @@ export class DashboardService {
     let deleteCommentParams = new HttpParams()
     .set('commentId', commentId)
     return this._http.put(`${this.issueUrl}/deleteComment?authToken=${this.cookies.get('authToken')}`, deleteCommentParams);
-    
   }
 }
