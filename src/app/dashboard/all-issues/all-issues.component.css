@@ -233,6 +233,11 @@
 }
 
 .createCommentbox{
-    background-color:rgb(241, 241, 241);
+    background-color:rgb(245, 245, 245);
     padding : 4rem;
+}
+
+.editorStyle{
+    background-color: white;
+    height: 300px;
 }

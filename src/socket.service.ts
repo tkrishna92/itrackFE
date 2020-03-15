@@ -57,13 +57,17 @@ export class SocketService {
   }
 
   public joinIssueRooms = (issueId)=>{
-    console.log("joining room "+issueId);
     this.socket.emit('join-issue-room', issueId);
   }
 
   public sendIssueActionNotification = (data)=>{
     console.log(data);
     this.socket.emit('issue-action', data);
+  }
+
+  public disconnectSocket = ()=>{
+    console.log("sending disconnect event")
+    this.socket.disconnect();
   }
 
 }

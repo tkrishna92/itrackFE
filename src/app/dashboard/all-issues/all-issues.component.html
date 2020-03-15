@@ -159,7 +159,8 @@
                         <h5>Comments</h5>
                        <div *ngFor = "let comment of issueComments" class="col-12 comments">
                            <div>
-                                <a><span style="color : rgb(23, 230, 168); font-weight: 400;">{{comment.commenterName}} :</span> {{comment.comment}} </a>
+                                <a><span style="color : rgb(23, 230, 168); font-weight: 400;">{{comment.commenterName}} :</span></a>
+                                <p [innerHtml]="comment.comment"></p>
                             </div>
                             <div style="margin: 0.2rem;" class="d-flex justify-content-between">
                                 <p style="color: rgb(138, 138, 138); margin:0;">posted on : <span>{{comment.createdOn.split("T")[0]}}</span></p>
@@ -197,13 +198,13 @@
             </div>
         </div>
         <div *ngIf="currentIssue.length > 1" class="col-12 createCommentbox">
-            <form>
-                <div class="form-group">
-                     <h4>Create Comment</h4>
-                     <textarea name="newComment" [(ngModel)]="newComment" class="form-control"
-                     required autofocus placeholder="enter comment here...">                         
-                     </textarea>
-                </div>                
+           <form [formGroup]="CommentEditor">
+                <div class = "form-group">
+                    <label for = "editor"><h4>Create Comment</h4></label>
+                    <quill-editor class="editorStyle" [modules]="config" [style] = "editorStyle" formControlName = "editor">
+                        
+                    </quill-editor>
+                </div>
             </form>
             <div class="btn btn-secondary btn-sm" (click)="createComment()">comment</div>
         </div>

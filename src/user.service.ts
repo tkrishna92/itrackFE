@@ -60,10 +60,10 @@ export class UserService {
   }
 
   //for getting logged in user details
-  public getSingleUserDetails(userId): any {
+  public getSingleUserDetails(userId, authToken): any {
     const userDetailParam = new HttpParams()
       .set('userId', userId)
-    return this._http.post(`${this.userUrl}/getUserDetails?authToken=${this.cookies.get('authToken')}`, userDetailParam);
+    return this._http.post(`${this.userUrl}/getUserDetails?authToken=${authToken}`, userDetailParam);
   }
 
   //for editing user details
@@ -74,7 +74,7 @@ export class UserService {
       .set('lastName', data.lastName)
       .set('mobileNumber', data.mobileNumber)
       .set('country', data.country)
-    return this._http.post(`${this.userUrl}/editUser?authToken=${this.cookies.get('authToken')}`, editParam);
+    return this._http.post(`${this.userUrl}/editUser?authToken=${data.authToken}`, editParam);
   }
 
   //for forgot password
@@ -89,24 +89,24 @@ export class UserService {
   public editPassword(data): any {
     const editPasswordParam = new HttpParams()
       .set('password', data.password)
-    return this._http.post(`${this.userUrl}/editPassword?authToken=${this.cookies.get('authToken')}`, editPasswordParam);
+    return this._http.post(`${this.userUrl}/editPassword?authToken=${data.authToken}`, editPasswordParam);
   }
 
   //for getting all the user details of all the users using the application
-  public getAllUserDetails(): any {
-    return this._http.get(`${this.userUrl}/getAllUsers?authToken=${this.cookies.get('authToken')}`);
+  public getAllUserDetails(authToken): any {
+    return this._http.get(`${this.userUrl}/getAllUsers?authToken=${authToken}`);
   }
 
   //for deleting selected user
-  public deleteSelectedUser(userId): any {
+  public deleteSelectedUser(userId, authToken): any {
     const deleteUserParams = new HttpParams()
      .set('userId', userId)
-    return this._http.put(`${this.userUrl}/deleteUser?authToken=${this.cookies.get('authToken')}`, deleteUserParams);
+    return this._http.put(`${this.userUrl}/deleteUser?authToken=${authToken}`, deleteUserParams);
   }
 
   //log out user
-  public logout(): any {
-    return this._http.get(`${this.userUrl}/logout?authToken=${this.cookies.get('authToken')}`);
+  public logout(authToken): any {
+    return this._http.get(`${this.userUrl}/logout?authToken=${authToken}`);
   }
 
 }

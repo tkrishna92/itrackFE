@@ -60,6 +60,7 @@ export class ForgotpwComponent implements OnInit {
           setTimeout(() => {
             this.cookies.set('authToken', data.data.authToken);
             this.cookies.set('email', data.data.userDetails.email)
+            this._http.setUserDetails(data.data);
             this.twoMinuteToken = true;
           }, 1000);
         } else {

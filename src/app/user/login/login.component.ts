@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from 'src/user.service';
 import { ToastrService } from 'ngx-toastr';
-import { CookieService } from 'ngx-cookie-service';
+import { CookieService} from 'ngx-cookie-service'
 import { Router } from '@angular/router';
 
 @Component({
@@ -33,11 +33,14 @@ export class LoginComponent implements OnInit {
         if (data.status == "200") {
           this.toaster.success("login success");
           setTimeout(() => {
-            this.cookies.set('userName', `${data.data.userDetails.firstName} ${data.data.userDetails.lastName}`);
-            this.cookies.set('userId', data.data.userDetails.userId);
+            // this.cookies.set('userName', `${data.data.userDetails.firstName} ${data.data.userDetails.lastName}`);
+            // this.cookies.set('userId', data.data.userDetails.userId);
+            // this.cookies.set('authToken', data.data.authToken);
+            // this.cookies.set('email', data.data.userDetails.email)
             this.cookies.set('authToken', data.data.authToken);
-            this.cookies.set('email', data.data.userDetails.email)
-            this._http.setUserDetails(data.data.userDetails);
+            this.cookies.set('userName', `${data.data.userDetails.firstName} ${data.data.userDetails.lastName}`);
+            this.cookies.set('userId', data.data.userDetails.userId);            
+            this._http.setUserDetails(data.data);
             this.router.navigate(['dashboard']);
           }, 1000)
         } else {

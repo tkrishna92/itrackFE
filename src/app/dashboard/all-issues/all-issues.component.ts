@@ -6,6 +6,7 @@ import { ToastrService } from 'ngx-toastr';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
 import { SocketService } from 'src/socket.service';
+import { FormGroup, FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-all-issues',
@@ -27,6 +28,7 @@ export class AllIssuesComponent implements OnInit {
   public authToken : string;
   public userName : string;
   public userId : string;
+  public email : string;
   public filter : string;
   public newTitle : string;
   public newDescription : string;
@@ -37,7 +39,6 @@ export class AllIssuesComponent implements OnInit {
   public editedTitle : string;
   public editedDescription :string;
   public selectedStatus : string;
-  public newComment : string;
   public titleSearchString : string;
   public pagesCount : number;
   public currentCommentSkip : number;
@@ -54,6 +55,33 @@ export class AllIssuesComponent implements OnInit {
   public availableStatus :any[] = [];
   public issueComments : any[] = [];
 
+  public CommentEditor : FormGroup;  // for quill form
+  public editorStyle = {
+    height: '300px'
+  }
+
+  public config = {
+    toolbar : [
+      ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+    ['blockquote', 'code-block'],
+
+    [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+    [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+    // [{ 'direction': 'rtl' }],                         // text direction
+
+    [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+    [{ 'font': [] }],
+    // [{ 'align': [] }],
+
+    ['clean']
+    ]
+  }
+
   constructor(private dashboard: DashboardService, private userService : UserService, private cookies : CookieService, private toaster : ToastrService, private spinner : NgxSpinnerService, private router : Router, private socketService : SocketService ) { }
 
   ngOnInit(): void {
@@ -63,12 +91,15 @@ export class AllIssuesComponent implements OnInit {
       this.spinner.hide();
     }, 2500)
 
+    this.CommentEditor = new FormGroup({
+      editor : new FormControl(null)
+    });
+    
 
-
-
-    this.authToken = this.cookies.get('authToken');
-    this.userName = this.cookies.get('userName');
-    this.userId = this.cookies.get('userId');
+    this.authToken = (this.cookies.get('authToken').length>0)?this.cookies.get('authToken'):this.userService.getUserDetails()["authToken"];
+    this.userName = (this.cookies.get('userName').length>0)?this.cookies.get('userName'):`${this.userService.getUserDetails()["userDetails"]["firstName"]} ${this.userService.getUserDetails()["userDetails"]["lastName"]}`;
+    this.userId = (this.cookies.get('userId').length>0)?this.cookies.get('userName'):`${this.userService.getUserDetails()["userDetails"]["userId"]}`;
+    this.email = (this.cookies.get('email').length>0)?this.cookies.get('email'):this.userService.getUserDetails()["userDetails"]["email"];
     this.sideNavSwitch = true;
     this.assignedIssuesSelected = true;
     this.watchingIssuesSelected = false;
@@ -85,7 +116,7 @@ export class AllIssuesComponent implements OnInit {
     setTimeout(()=>{
       this.joinAllIssueRooms();
       this.getAssignedIssues("new");
-      this.getIssueNotification();
+      this.getIssueNotification(); 
     },10);
     
   }
@@ -114,7 +145,12 @@ export class AllIssuesComponent implements OnInit {
     this.socketService.getIssueNotification().subscribe(
       data=>{
         console.log(data);
-        this.toaster.info(data.notification);
+        this.toaster.info(data.notification).onTap.subscribe(()=>{
+          this.getAllIssues(data.filter);
+          setTimeout(()=>{
+            this.selectCurrentIssue(data.issueId);
+          },100);
+        });
       }
     )
   }
@@ -125,8 +161,9 @@ export class AllIssuesComponent implements OnInit {
   //--------------------------------Http calls-----------------------
   //-----------------------------------------------------------------
 
+
   //get assigned issues
-  public getAssignedIssues = (filter, skip?)=>{
+  public getAssignedIssues = (filter?, skip?)=>{
     this.filter = (filter.length>0)?filter:"new";
     let data = {
       filter : this.filter,
@@ -160,7 +197,7 @@ export class AllIssuesComponent implements OnInit {
   }
 
   //get assigned issues
-  public getWatchingIssues = (filter, skip?)=>{
+  public getWatchingIssues = (filter?, skip?)=>{
     this.filter = (filter.length>0)?filter:"new";
     let data = {
       filter : this.filter,
@@ -194,7 +231,7 @@ export class AllIssuesComponent implements OnInit {
   }
 
   //get assigned issues
-  public getReportedIssues = (filter, skip?)=>{
+  public getReportedIssues = (filter?, skip?)=>{
     this.filter = (filter.length>0)?filter:"new";
     let data = {
       filter : this.filter,
@@ -334,9 +371,10 @@ export class AllIssuesComponent implements OnInit {
           this.getIssues(this.issuesSelected);
           let notification = {
             issueId : editeIssueData.issueId,
+            filter : this.filter,
             notification : `${this.userName} edited ${this.editedTitle}`
           }
-          this.socketService.sendIssueActionNotification(notification);
+          this.socketService.sendIssueActionNotification(notification);          
           setTimeout(()=>{
             this.selectCurrentIssue(editeIssueData.issueId);
           }, 10);
@@ -349,14 +387,20 @@ export class AllIssuesComponent implements OnInit {
 
   //assign issue to another user
   public reassignTo= (userId, issueId)=>{
-    let data = {
+    let paramData = {
       issueId : issueId,
       assignToId : userId
     }
-    this.dashboard.assignIssue(data).subscribe(
+    this.dashboard.assignIssue(paramData).subscribe(
       data=>{
         if(data.status == 200){
           this.toaster.success(data.message);
+          let notification = {
+            issueId : paramData.issueId,
+            filter : this.filter,
+            notification : `${this.userName} assigned an issue to another user`
+          }
+          this.socketService.sendIssueActionNotification(notification);
         }else{
           this.toaster.warning(data.message);
         }
@@ -381,16 +425,21 @@ export class AllIssuesComponent implements OnInit {
   //change issue status
   public changeIssueStatus = (status)=>{
     this.selectedStatus = status;
-    let data = {
+    let paramData = {
       issueId : this.currentIssue,
       newStatus : this.selectedStatus
     }
-    console.log(data);
-    this.dashboard.changeIssueStatus(data).subscribe(
+    this.dashboard.changeIssueStatus(paramData).subscribe(
       data=>{
         if(data.status == 200){
           this.setFilter(this.selectedStatus);
-          this.toaster.success(data.message);
+          this.toaster.success(data.message);          
+          let notification = {
+            issueId : paramData.issueId,
+            filter : this.filter,
+            notification : `${this.userName} moved a status to ${paramData.newStatus}`
+          }
+          this.socketService.sendIssueActionNotification(notification);
         }else{
           this.toaster.warning(data.message);
         }
@@ -431,22 +480,30 @@ export class AllIssuesComponent implements OnInit {
 
   //create a comment on this issue
   public createComment = ()=>{
-    let data = {
+    let newComment = this.CommentEditor.get('editor').value;
+    console.log(newComment);
+    let paramData = {
       issueId : this.currentIssue,
-      comment : this.newComment
+      comment : newComment
     }
-    console.log(data);
-    this.dashboard.createNewComment(data).subscribe(
+    this.dashboard.createNewComment(paramData).subscribe(
       data=>{
         if(data.status == 200){
           this.toaster.success(data.message);
           this.getIssueComments(this.currentIssue)
+          let notification = {
+            issueId : paramData.issueId,
+            filter : this.filter,
+            notification : `${this.userName} made a new comment`
+          }
+          this.socketService.sendIssueActionNotification(notification);
         }else{
           this.toaster.warning(data.message);
         }
       }
     )
-    this.newComment = ""
+    this.CommentEditor.reset();
+    
   }
 
   //delete comment
@@ -456,6 +513,12 @@ export class AllIssuesComponent implements OnInit {
         if(data.status == 200){
           this.toaster.success(data.message);
           this.getIssueComments(this.currentIssue);
+          let notification = {
+            issueId : this.currentIssue,
+            filter : this.filter,
+            notification : `${this.userName} deleted a comment`
+          }
+          this.socketService.sendIssueActionNotification(notification);
         }else{
           this.toaster.warning(data.message);
         }
@@ -467,7 +530,7 @@ export class AllIssuesComponent implements OnInit {
   //--------------------Http calls using user service----------------
 
   public getAllUsers = ()=>{
-    this.userService.getAllUserDetails().subscribe(
+    this.userService.getAllUserDetails(this.authToken).subscribe(
       data=>{
         if(data.status == 200){
           this.allUsers = data.data;
@@ -607,7 +670,7 @@ public selectCurrentIssue = (issueId)=>{
 
 //join all the issue rooms that the user is currently watching
 public joinAllIssueRooms = ()=>{
-  this.userService.getSingleUserDetails(this.userId).subscribe(
+  this.userService.getSingleUserDetails(this.userId, this.authToken).subscribe(
     data=>{
       if(data.status == 200){
         console.log(data);
@@ -620,14 +683,14 @@ public joinAllIssueRooms = ()=>{
 }
 
   public logout = ()=>{
-    this.userService.logout().subscribe(
+    this.userService.logout(this.authToken).subscribe(
       data=>{
         if(data.status == 200){
           this.toaster.success(data.message);
           this.cookies.delete('authToken');
           this.cookies.delete('userName');
           this.cookies.delete('userId');
-          // this.socketService.disconnectSocket();
+          this.socketService.disconnectSocket();
           this.router.navigate(['/']);
         }else{
           this.toaster.error(data.message);
