@@ -115,12 +115,14 @@
     font-weight: 500;
     padding : 3px;
     width : max-content;
+    cursor: pointer;
 }
 
  .sideNavOptions .optionsSelected{
     font-weight: 500;
     padding : 3px;
     width : max-content;
+    cursor: pointer;
     background-color: rgb(132, 238, 206);
     border : 1px solid rgb(80, 80, 80);
     border-radius: 5px;
@@ -153,11 +155,16 @@
 .createIssue{
     margin-top: 1rem;
     border-radius: 8px;
-    cursor: pointer;    
+    cursor: pointer;
+    background-color: rgb(21, 94, 240);
+    color : white;
+    font-weight: 500;
+    transition : 0.5s;
 }
 
 .createIssue:hover{
-    background-color: rgb(132, 238, 206);
+    transition : 0.5s;
+    background-color: rgb(113, 156, 241);
 }
 
 .dashboard{
@@ -233,11 +240,16 @@
 }
 
 .createCommentbox{
-    background-color:rgb(245, 245, 245);
+    background-color:rgb(241, 241, 241);
     padding : 4rem;
 }
 
 .editorStyle{
     background-color: white;
     height: 300px;
+}
+
+.files{
+    border-radius: 7px;
+    cursor: pointer;
 }

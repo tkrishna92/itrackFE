@@ -25,6 +25,7 @@ export class AllIssuesComponent implements OnInit {
   public allIssuesIcon : string = "assets/icons/allIssues.png"
   public deleteIcon : string = "assets/icons/delete.png"
 
+  public fileToUpload :File = null;
   public authToken : string;
   public userName : string;
   public userId : string;
@@ -54,10 +55,14 @@ export class AllIssuesComponent implements OnInit {
   public watchersList:any[] = [];
   public availableStatus :any[] = [];
   public issueComments : any[] = [];
+  public uploadedFileData : any[] = [];
+  public allFilesInfo : any[] = [];
 
   public CommentEditor : FormGroup;  // for quill form
   public editorStyle = {
-    height: '300px'
+    height: '300px',
+    backgroundColor : 'white',
+    maxWidth : '700px'
   }
 
   public config = {
@@ -118,6 +123,7 @@ export class AllIssuesComponent implements OnInit {
       this.getAssignedIssues("new");
       this.getIssueNotification(); 
     },10);
+    this.getAllFiles();
     
   }
 
@@ -480,8 +486,7 @@ export class AllIssuesComponent implements OnInit {
 
   //create a comment on this issue
   public createComment = ()=>{
-    let newComment = this.CommentEditor.get('editor').value;
-    console.log(newComment);
+    let newComment = this.CommentEditor.get('editor').value;    
     let paramData = {
       issueId : this.currentIssue,
       comment : newComment
@@ -489,6 +494,9 @@ export class AllIssuesComponent implements OnInit {
     this.dashboard.createNewComment(paramData).subscribe(
       data=>{
         if(data.status == 200){
+          this.uploadFile("comment", data.data.commentId);
+          console.log(this.uploadedFileData);
+          console.log(newComment);
           this.toaster.success(data.message);
           this.getIssueComments(this.currentIssue)
           let notification = {
@@ -526,6 +534,37 @@ export class AllIssuesComponent implements OnInit {
     )
   }
 
+  //get all files info
+  public getAllFiles = ()=>{
+    this.dashboard.getAllFiles().subscribe(
+      data=>{
+        if(data.status == 200){
+          this.allFilesInfo = data.data;
+          console.log(this.allFilesInfo);
+        }else if(data.status == 500){
+          this.toaster.warning(data.message);
+        }
+      }
+    )
+  }
+
+  //uploading file
+  public uploadFile = (type, typeId)=>{
+    this.dashboard.uploadFile(this.fileToUpload, type, typeId).subscribe(
+      data=>{
+        console.log(data);
+      }
+    ) 
+  }
+
+
+  //download files
+  public downloadFile = (fileId, fileName)=>{
+    console.log(fileId);
+    console.log(fileName);
+    this.dashboard.downloadFiles(fileId, fileName)
+  }
+
 
   //--------------------Http calls using user service----------------
 
@@ -547,9 +586,12 @@ export class AllIssuesComponent implements OnInit {
   //-----------------------------------------------------------------
 
   public sideNavFlag =()=>{
+    console.log(this.sideNavSwitch);
+    console.log(this.currentIssue.length);
+    console.log(this.filter)
     if(this.sideNavSwitch == true){
       this.sideNavSwitch = false;
-    }else if(this.sideNavSwitch == false){
+    }else{
       this.sideNavSwitch = true;
     }
   }
@@ -681,6 +723,13 @@ public joinAllIssueRooms = ()=>{
     }
   )
 }
+
+//handling file upload
+public handleCommentFile = (files : FileList)=>{
+  this.fileToUpload = files.item(0);
+  console.log(this.fileToUpload);
+}
+
 
   public logout = ()=>{
     this.userService.logout(this.authToken).subscribe(

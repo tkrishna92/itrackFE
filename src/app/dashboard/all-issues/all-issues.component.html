@@ -1,11 +1,11 @@
 <div class="container-fluid" >
     <div class="row d-flex">
         <div class="col-md-12 navBar">
-            <nav class="navbar navbar-expand-md navbar-light" style="background-color: rgb(227, 228, 230);">
-                <a class="navbar-brand brand" href="dashboard"><span style="font-size: larger;">i</span>TracK</a>
+            <nav class="navbar navbar-expand-md navbar-light" style="background-color: rgb(21, 94, 240);">
+                <a class="navbar-brand brand" href="dashboard"  style="color : white"><span style="font-size: larger; color :rgb(89, 255, 56)">i</span>TracK</a>
                 <div class="dropdown show d-none d-sm-block ml-auto" style="margin-top: 1rem; margin-right: 3rem;">
                     <a class="btn dropdown-toggle" href="#" role="button" id="smallScreenUserOptions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        {{userName}}
+                        <span style="color:rgb(255, 255, 255)">{{userName}}</span>
                     </a>
                   
                     <div class="dropdown-menu" aria-labelledby="smallScreenUserOptions"style="max-width: fit-content;">
@@ -16,7 +16,9 @@
         </div>
     </div>
 
-    <!-- display for mobile screen -->
+    <!-- -------------------------------------------------------------------------- -->
+    <!-- ---------------------- display for mobile screen ------------------------- -->
+    <!-- -------------------------------------------------------------------------- -->
     <div class="row d-xs-flex d-sm-none">  
         <div class="col d-flex" style="background-color: rgb(241, 241, 241);">
             <div class="col" style="max-width:4rem; height:3.5rem;">
@@ -166,6 +168,9 @@
                                 <p style="color: rgb(138, 138, 138); margin:0;">posted on : <span>{{comment.createdOn.split("T")[0]}}</span></p>
                                 <img *ngIf = "comment.commenterId == userId" class="icon" src={{deleteIcon}} (click)="deleteComment(comment.commentId)">
                             </div>
+                            <div *ngFor = "let file of allFilesInfo">
+                                <button class="files" *ngIf = "comment.commentId == file.fileForId" >{{file.fileName}}</button>
+                            </div>
                        </div>
                    </div>                   
                 </div>                
@@ -194,16 +199,272 @@
                 </div>
                 <div class="pagination">
                     <div *ngFor="let page of pages" class="page" (click)="getPagesIssues(page)">{{page}}</div>
-                </div>
+                </div>                
+            </div>
+            <div *ngIf="currentIssue.length != 0" class="selectedIssue">
+                <div class="issueDetails">
+                    <h4>
+                        <span style="color : rgb(23, 230, 168); font-weight: 400;"> 
+                            {{selectedIssueDetails[0].reporterName}}
+                        </span>
+                        : {{selectedIssueDetails[0].title}}
+                    </h4>
+                    <p>
+                        {{selectedIssueDetails[0].description}}
+                    </p>
+                   <div class="row d-flex" style="padding-bottom : 5px; border-bottom: 1px solid grey;">
+                        <div class="col-6">
+                            <div >
+                                <span style="font-weight: 500;">
+                                    Assigned To : 
+                                </span>
+                                {{selectedIssueDetails[0].assigneeName}}
+                            </div>
+                            <div >
+                                <span style="font-weight: 500;">
+                                    createdOn : 
+                                </span>
+                                {{selectedIssueDetails[0].createdOn.split("T")[0]}}
+                            </div>
+                        </div>
+                        <div class="col-6">                            
+                            <div class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="watchedBy" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                watched by
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="watchedBy">
+                                <a *ngFor = "let watcher of watchersList" class="dropdown-item">{{watcher}}</a>
+                                </div>
+                            </div>
+                            <div class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="assignTo" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Re-Assign To
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="assignTo">
+                                    <a *ngFor = "let user of allUsers" class="dropdown-item p-0 m-0" style="text-align: center;" (click)="reassignTo(user.userId, currentIssue)">
+                                        <span *ngIf = "user.userId != selectedIssueDetails[0].assignedToId">
+                                            {{user.firstName}} {{user.lastName}}
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div *ngIf = "watchingCurrentIssue == false" class="dropdown p-1" (click)="addToWatchList(currentIssue)">
+                                <button class="btn btn-secondary btn-sm">
+                                Watch Issue
+                                </button>                                
+                            </div>
+                            <div *ngIf = "selectedIssueDetails[0].reporterId == userId || selectedIssueDetails[0].assignedToId == userId" class="dropdown p-1" (click)="deleteIssue(currentIssue)">
+                                <button class="btn btn-secondary btn-sm">
+                                Delete Issue
+                                </button>                                
+                            </div>
+                            <div *ngIf = "selectedIssueDetails[0].reporterId == userId || selectedIssueDetails[0].assignedToId == userId" class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="changeStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Change Status
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="changeStatus">
+                                        <a *ngFor = "let status of availableStatus" class="dropdown-item p-0 m-0" style="text-align: center;" (click)="changeIssueStatus(status)">
+                                            <span *ngIf = "status != filter">
+                                                {{status}}
+                                            </span>
+                                        </a>
+                                    </div>                                
+                            </div>
+                            <button class = "btn btn-secondary btn-sm m-1" data-toggle="modal" data-target="#editIssueModal">Edit Issue</button>
+                        </div>
+                   </div>
+                   <div class="row d-flex commentBox" style="margin : 1rem;">
+                        <h5>Comments</h5>
+                       <div *ngFor = "let comment of issueComments" class="col-12 comments">
+                           <div>
+                                <a><span style="color : rgb(23, 230, 168); font-weight: 400;">{{comment.commenterName}} :</span></a>
+                                <p [innerHtml]="comment.comment"></p>
+                            </div>
+                            <div style="margin: 0.2rem;" class="d-flex justify-content-between">
+                                <p style="color: rgb(138, 138, 138); margin:0;">posted on : <span>{{comment.createdOn.split("T")[0]}}</span></p>
+                                <img *ngIf = "comment.commenterId == userId" class="icon" src={{deleteIcon}} (click)="deleteComment(comment.commentId)">
+                            </div>
+                            <div *ngFor = "let file of allFilesInfo">
+                                <button class="files" *ngIf = "comment.commentId == file.fileForId" >{{file.fileName}}</button>
+                            </div>
+                       </div>
+                   </div>                   
+                </div>                
             </div>
         </div>
-        <div *ngIf="currentIssue.length > 1" class="col-12 createCommentbox">
+        <div *ngIf="currentIssue.length > 1" class="col createCommentbox">
            <form [formGroup]="CommentEditor">
                 <div class = "form-group">
                     <label for = "editor"><h4>Create Comment</h4></label>
-                    <quill-editor class="editorStyle" [modules]="config" [style] = "editorStyle" formControlName = "editor">
+                    <quill-editor class="editorStyle" [modules]="config" [styles] = "editorStyle" formControlName = "editor">
                         
                     </quill-editor>
+                </div>
+                <div class = "form-group">
+                    <label for = "file">Choose File</label>
+                    <input type = "file" id = "file" (change)="handleCommentFile($event.target.files)">
+                </div>
+            </form>
+            <div class="btn btn-secondary btn-sm" (click)="createComment()">comment</div>
+        </div>
+    </div>
+
+    <!-- -------------------------------------------------------------------------- -->
+    <!-- -------------------- display for larger than mobile screens -------------- -->
+    <!-- -------------------------------------------------------------------------- -->
+    <div class="row d-none d-sm-flex" style="background-color: rgb(241, 241, 241); padding-top: 2rem;">  
+        <div class="col d-flex justify-content-end">
+            
+            <div *ngIf="filter != 'new'" class="col-2 filter" (click) = "setFilter('new')">New</div>
+            <div *ngIf="filter == 'new'" class="col-2 filterSelected" (click) = "setFilter('new')">New</div>
+            <div *ngIf="filter != 'backlog'" class="col-2 filter" (click) = "setFilter('backlog')">Backlog</div>
+            <div *ngIf="filter == 'backlog'" class="col-2 filterSelected" (click) = "setFilter('backlog')">Backlog</div>
+            <div *ngIf="filter != 'in-progress'" class="col-2 filter" (click) = "setFilter('in-progress')">In Progress</div>
+            <div *ngIf="filter == 'in-progress'" class="col-2 filterSelected" (click) = "setFilter('in-progress')">In Progress</div>
+            <div *ngIf="filter != 'done'" class="col-2 filter" (click) = "setFilter('done')">Done</div>
+            <div *ngIf="filter == 'done'" class="col-2 filterSelected" (click) = "setFilter('done')">Done</div>
+        </div>
+        <div class="col-12 d-flex" style="background-color: rgb(241, 241, 241);">
+            <div class="sideNavOptions">
+                <div *ngIf = "issuesSelected != 'assigned'" class="options" (click) = "getIssues('assigned')"><img class="icon" src={{assignIcon}}>Assigned</div>
+                <div *ngIf = "issuesSelected == 'assigned'" class="optionsSelected" (click) = "getIssues('assigned')"><img class="icon" src={{assignIcon}}>Assigned</div>
+                <div *ngIf = "issuesSelected != 'watching'" class="options" (click) = "getIssues('watching')"><img class="icon" src={{watchingIcon}}>Watching</div>
+                <div *ngIf = "issuesSelected == 'watching'" class="optionsSelected" (click) = "getIssues('watching')"><img class="icon" src={{watchingIcon}}>Watching</div>
+                <div *ngIf = "issuesSelected != 'reported'" class="options" (click) = "getIssues('reported')"><img class="icon" src={{reportedIcon}}>Reported</div>
+                <div *ngIf = "issuesSelected == 'reported'" class="optionsSelected" (click) = "getIssues('reported')"><img class="icon" src={{reportedIcon}}>Reported</div>
+                <div *ngIf = "issuesSelected != 'allIssues'" class="options" (click) = "getIssues('allIssues')"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
+                <div *ngIf = "issuesSelected == 'allIssues'" class="optionsSelected" (click) = "getIssues('allIssues')"><img class="icon" src={{allIssuesIcon}}>All Issues</div>
+                <button class = "createIssue" data-toggle="modal" data-target="#createIssueModal">Create Issue</button>
+                <div>
+                    <form class="form-inline my-2 my-lg-0">
+                        <input class="form-control mr-sm-2" type="search" placeholder="Search titles" aria-label="Search" name="titleSearchString" [(ngModel)]="titleSearchString" (keydown)="searchOnKeyPress($event)">                        
+                      </form>
+                </div>
+            </div>
+            <div *ngIf="currentIssue.length == 0" class="dashboard" style="max-width: 1000px;">
+                <div class="issueTable">
+                    <div *ngFor = "let issue of retreivedIssues" class = "issue" (click)="selectCurrentIssue(issue.issueId)">
+                        <div class = "row" style=" width : 100%; min-height : fit-content; max-height: max-content; overflow-x: hidden; overflow-y: scroll;">
+                            <div class = "col-3" style="margin : 2px; max-height: 4rem; overflow: hidden;">
+                                <a style="font-weight: 500;">{{issue.title}}</a>
+                            </div>
+                            <div class = "col-8" style = "max-height: 4rem; overflow-y: scroll;">
+                                <a>{{issue.description}}</a>
+                            </div>
+                            <div class="col-12" style="margin : 5px; padding : 5px; background-color: rgb(231, 231, 231);">
+                                <a><span style="font-weight: 500; padding-left : 10px; overflow-x: hidden;">Reported By : </span>{{issue.reporterName}}</a><br>
+                                <a ><span style="font-weight: 500; padding-left : 10px; overflow-x: hidden;">Assigned To : </span>{{issue.assigneeName}}</a>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pagination">
+                    <div *ngFor="let page of pages" class="page" (click)="getPagesIssues(page)">{{page}}</div>
+                </div>
+            </div>
+            <div *ngIf="currentIssue.length > 1" class="selectedIssue">
+                <div class="issueDetails">
+                    <h4>
+                        <span style="color : rgb(23, 230, 168); font-weight: 400;"> 
+                            {{selectedIssueDetails[0].reporterName}}
+                        </span>
+                        : {{selectedIssueDetails[0].title}}
+                    </h4>
+                    <p>
+                        {{selectedIssueDetails[0].description}}
+                    </p>
+                   <div class="row d-flex" style="padding-bottom : 5px; border-bottom: 1px solid grey;">
+                        <div class="col-6">
+                            <div >
+                                <span style="font-weight: 500;">
+                                    Assigned To : 
+                                </span>
+                                {{selectedIssueDetails[0].assigneeName}}
+                            </div>
+                            <div >
+                                <span style="font-weight: 500;">
+                                    createdOn : 
+                                </span>
+                                {{selectedIssueDetails[0].createdOn.split("T")[0]}}
+                            </div>
+                        </div>
+                        <div class="col-6">                            
+                            <div class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="watchedBy" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                watched by
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="watchedBy">
+                                <a *ngFor = "let watcher of watchersList" class="dropdown-item">{{watcher}}</a>
+                                </div>
+                            </div>
+                            <div class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="assignTo" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Re-Assign To
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="assignTo">
+                                    <a *ngFor = "let user of allUsers" class="dropdown-item p-0 m-0" style="text-align: center;" (click)="reassignTo(user.userId, currentIssue)">
+                                        <span *ngIf = "user.userId != selectedIssueDetails[0].assignedToId">
+                                            {{user.firstName}} {{user.lastName}}
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div *ngIf = "watchingCurrentIssue == false" class="dropdown p-1" (click)="addToWatchList(currentIssue)">
+                                <button class="btn btn-secondary btn-sm">
+                                Watch Issue
+                                </button>                                
+                            </div>
+                            <div *ngIf = "selectedIssueDetails[0].reporterId == userId || selectedIssueDetails[0].assignedToId == userId" class="dropdown p-1" (click)="deleteIssue(currentIssue)">
+                                <button class="btn btn-secondary btn-sm">
+                                Delete Issue
+                                </button>                                
+                            </div>
+                            <div *ngIf = "selectedIssueDetails[0].reporterId == userId || selectedIssueDetails[0].assignedToId == userId" class="dropdown p-1">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="changeStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Change Status
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="changeStatus">
+                                        <a *ngFor = "let status of availableStatus" class="dropdown-item p-0 m-0" style="text-align: center;" (click)="changeIssueStatus(status)">
+                                            <span *ngIf = "status != filter">
+                                                {{status}}
+                                            </span>
+                                        </a>
+                                    </div>                                
+                            </div>
+                            <button class = "btn btn-secondary btn-sm m-1" data-toggle="modal" data-target="#editIssueModal">Edit Issue</button>
+                        </div>
+                   </div>
+                   <div class="row d-flex commentBox" style="margin : 1rem;">
+                        <h5>Comments</h5>
+                       <div *ngFor = "let comment of issueComments" class="col-12 comments">
+                           <div>
+                                <a><span style="color : rgb(23, 230, 168); font-weight: 400;">{{comment.commenterName}} :</span></a>
+                                <p [innerHtml]="comment.comment"></p>
+                            </div>
+                            <div style="margin: 0.2rem;" class="d-flex justify-content-between">
+                                <p style="color: rgb(138, 138, 138); margin:0;">posted on : <span>{{comment.createdOn.split("T")[0]}}</span></p>
+                                <img *ngIf = "comment.commenterId == userId" class="icon" src={{deleteIcon}} (click)="deleteComment(comment.commentId)">
+                            </div>
+                            <div *ngFor = "let file of allFilesInfo">
+                                <button class="files" *ngIf = "comment.commentId == file.fileForId" >{{file.fileName}}</button>
+                            </div>
+                       </div>
+                   </div>                   
+                </div>                
+            </div>
+        </div>
+        
+        <div *ngIf="currentIssue.length > 1" class="col-12 createCommentbox" style="max-width: 700px;">
+           <form [formGroup]="CommentEditor">
+                <div class = "form-group">
+                    <label for = "editor"><h4>Create Comment</h4></label>
+                    <quill-editor [styles]="editorStyle" [modules]="config" formControlName = "editor">
+                        
+                    </quill-editor>
+                </div>
+                <div class = "form-group">
+                    <label for = "file">Choose File</label>
+                    <input type = "file" id = "file" (change)="handleCommentFile($event.target.files)">
                 </div>
             </form>
             <div class="btn btn-secondary btn-sm" (click)="createComment()">comment</div>

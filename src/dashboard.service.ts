@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders} from '@angular/common/http';
 import { CookieService } from 'ngx-cookie-service';
 import { UserService } from './user.service';
+import { saveAs } from 'file-saver';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardService {
+
 
   public issueUrl = "http://localhost:3000/api/v1/issues";
   // public issueUrl = "http://api.webdevk.com/api/v1/issues";
@@ -132,4 +134,37 @@ export class DashboardService {
     .set('commentId', commentId)
     return this._http.put(`${this.issueUrl}/deleteComment?authToken=${this.authToken}`, deleteCommentParams);
   }
+
+  //upload file to server
+  public uploadFile = (uploadingFile : File, fileFor, FileForId)=>{
+    console.log(uploadingFile);
+    const formData : FormData = new FormData();
+    formData.append('uploadedFile', uploadingFile, uploadingFile.name);
+    return this._http.post(`${this.issueUrl}/saveFileInfo?fileFor=${fileFor}&fileForId=${FileForId}&authToken=${this.authToken}`, formData);
+  }
+
+  //get all files info from server
+  public getAllFiles = ():any=>{
+    return this._http.get(`${this.issueUrl}/getAllFiles?authToken=${this.authToken}`);
+  }
+
+  //download file from server
+  public downloadFiles = (fileId, fileName): any=>{
+    let headers = new HttpHeaders({
+      "Content-Disposition" : "attachment"
+    })
+    console.log(fileId);
+    console.log(fileName);
+    console.log(this._http.get(`${this.issueUrl}/downloadFile?fileId=${fileId}&fileName=${fileName}&authToken=${this.authToken}`));
+    this._http.get(`${this.issueUrl}/downloadFile?fileId=${fileId}&fileName=${fileName}&authToken=${this.authToken}`, {headers, responseType : "blob"})
+    .toPromise()
+    .then(blob=>{
+      saveAs(blob, fileName);
+    })
+  }
+
 }
+
+
+
+
