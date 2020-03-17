@@ -17,6 +17,7 @@ import { LoginComponent } from './login/login.component';
 import { SignupComponent } from './signup/signup.component';
 import { ForgotpwComponent } from './forgotpw/forgotpw.component';
 import { EditpwComponent } from './editpw/editpw.component';
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 @NgModule({
   declarations: [LoginComponent, SignupComponent, ForgotpwComponent, EditpwComponent],
@@ -24,6 +25,7 @@ import { EditpwComponent } from './editpw/editpw.component';
     CommonModule,
     BrowserAnimationsModule,
     FormsModule,
+    NgxSpinnerModule,
     ToastrModule.forRoot(),
     RouterModule.forChild([
       { path : 'signup', component : SignupComponent },

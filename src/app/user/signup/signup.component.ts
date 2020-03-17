@@ -47,7 +47,6 @@ export class SignupComponent implements OnInit {
     this._http.getPhoneCode(country).subscribe(
       data => {
         this.countryPhoneCode = `+${data.data}`
-        console.log(this.countryPhoneCode);
       }
     )
   }

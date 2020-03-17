@@ -15,6 +15,7 @@ import { QuillModule } from 'ngx-quill';
 //components and services of this module
 import { AllIssuesComponent } from './all-issues/all-issues.component';
 import { SelectedIssueComponent } from './selected-issue/selected-issue.component';
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 
 
@@ -24,6 +25,7 @@ import { SelectedIssueComponent } from './selected-issue/selected-issue.componen
     CommonModule,
     BrowserAnimationsModule,
     FormsModule,
+    NgxSpinnerModule,
     ReactiveFormsModule,  //for quill
     QuillModule.forRoot(),          //for quill
     ToastrModule.forRoot(),

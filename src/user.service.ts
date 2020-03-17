@@ -7,8 +7,8 @@ import { CookieService } from 'ngx-cookie-service';
 })
 export class UserService {
 
-  public userUrl = "http://localhost:3000/api/v1/users";
-  // public userUrl = "http://api.webdevk.com/api/v1/users";
+  // public userUrl = "http://localhost:3000/api/v1/users";
+  public userUrl = "http://api.webdevk.com/api/v1/users";
 
   constructor(private _http: HttpClient, private cookies : CookieService) { }
 
@@ -53,6 +53,12 @@ export class UserService {
   public setUserDetails(data) {
     localStorage.setItem('userInfo', JSON.stringify(data));
   }
+
+  //delete user details on local storage on log out
+  public deleteUserLocalDetail(){
+    localStorage.removeItem('userInfo');
+  }
+
 
   //for getting logged in user's details from local storage
   public getUserDetails() {

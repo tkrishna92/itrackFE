@@ -11,8 +11,8 @@ import { CookieService } from 'ngx-cookie-service';
 })
 export class SocketService {
 
-  public url = "http://localhost:3000";
-  // public url = "http://api.webdevk.com";
+  // public url = "http://localhost:3000";
+  public url = "http://api.webdevk.com";
 
   public socket;
 
@@ -38,6 +38,15 @@ export class SocketService {
     })
   }
 
+  //on checking authToken server sends "user-loggedin" event
+  public verifyUserLoggedIn = ()=>{
+    return Observable.create((observer)=>{
+      this.socket.on("user-loggedin", (data)=>{
+        observer.next(data);
+      })
+    })
+  }
+
   //get action notifications on issues
   public getIssueNotification = ()=>{
     return Observable.create((observer)=>{
@@ -56,17 +65,19 @@ export class SocketService {
     this.socket.emit("auth-user", (authToken));
   }
 
+  public checkUserLogin = (userId)=>{
+    this.socket.emit("check-user-login", userId);
+  }
+
   public joinIssueRooms = (issueId)=>{
     this.socket.emit('join-issue-room', issueId);
   }
 
   public sendIssueActionNotification = (data)=>{
-    console.log(data);
     this.socket.emit('issue-action', data);
   }
 
   public disconnectSocket = ()=>{
-    console.log("sending disconnect event")
     this.socket.disconnect();
   }
 

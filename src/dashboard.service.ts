@@ -10,8 +10,8 @@ import { saveAs } from 'file-saver';
 export class DashboardService {
 
 
-  public issueUrl = "http://localhost:3000/api/v1/issues";
-  // public issueUrl = "http://api.webdevk.com/api/v1/issues";
+  // public issueUrl = "http://localhost:3000/api/v1/issues";
+  public issueUrl = "http://api.webdevk.com/api/v1/issues";
   public authToken : string;
 
   constructor(private _http : HttpClient, private cookies : CookieService, private userService : UserService) { 
@@ -137,7 +137,6 @@ export class DashboardService {
 
   //upload file to server
   public uploadFile = (uploadingFile : File, fileFor, FileForId)=>{
-    console.log(uploadingFile);
     const formData : FormData = new FormData();
     formData.append('uploadedFile', uploadingFile, uploadingFile.name);
     return this._http.post(`${this.issueUrl}/saveFileInfo?fileFor=${fileFor}&fileForId=${FileForId}&authToken=${this.authToken}`, formData);
@@ -153,9 +152,6 @@ export class DashboardService {
     let headers = new HttpHeaders({
       "Content-Disposition" : "attachment"
     })
-    console.log(fileId);
-    console.log(fileName);
-    console.log(this._http.get(`${this.issueUrl}/downloadFile?fileId=${fileId}&fileName=${fileName}&authToken=${this.authToken}`));
     this._http.get(`${this.issueUrl}/downloadFile?fileId=${fileId}&fileName=${fileName}&authToken=${this.authToken}`, {headers, responseType : "blob"})
     .toPromise()
     .then(blob=>{
